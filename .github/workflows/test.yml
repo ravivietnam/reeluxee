@@ -1,0 +1,3 @@
+- name: List input files
+  run: |
+    ls -l ./hiddenmemoriz/reels
