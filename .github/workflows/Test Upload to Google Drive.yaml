@@ -1,12 +1,10 @@
-name: Upload to Google Drive
- 
+name: Upload Spotify PNG to GDrive
+
 on:
-  push:
-    branches: [ main ]  # Runs when you push to main
-  workflow_dispatch:    # Allows you to run it manually
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
-  upload:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -15,16 +13,18 @@ jobs:
       - name: Install Rclone
         run: sudo apt-get install -y rclone
 
-      - name: Create Service Account File
+      - name: Setup Service Account File
         run: |
           echo '${{ secrets.GDRIVE_SERVICE_ACCOUNT }}' > sa.json
 
-      - name: Upload File to GDrive
+      - name: Upload to Specific Folder
         env:
-          # We configure rclone via environment variables to avoid a config file
+          # Configuration via environment variables
           RCLONE_CONFIG_MYDRIVE_TYPE: drive
           RCLONE_CONFIG_MYDRIVE_SCOPE: drive
           RCLONE_CONFIG_MYDRIVE_SERVICE_ACCOUNT_FILE: sa.json
         run: |
-          # Usage: rclone copy <src> <remote_name>:<folder_id_or_path>
-          rclone copy spotify.png mydrive: --drive-use-trash=false -v
+          rclone copy spotify.png mydrive: \
+          --drive-root-folder-id "1EVIHk24_3C7DsCLcYoQOdrM_T11UrkWH" \
+          --drive-use-trash=false \
+          -v
