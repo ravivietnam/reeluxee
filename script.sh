@@ -61,7 +61,7 @@ logo_fade=$(echo "$DUR" | awk '{print $1 - 1.2}')
 
 FILTER="[1:v]loop=-1:1:0,scale=180:-1,format=rgba,fade=t=in:st=${logo_start}:d=0.5:alpha=1,fade=t=out:st=${logo_fade}:d=0.5:alpha=1[logo_p]; \
 [0:v][logo_p]overlay=x=(W-w)/2:y=H-h-120:shortest=1[v_l]; \
-[v_l]drawtext=fontfile='${FONT}':textfile='$TMP/quote.txt':fontcolor=white:fontsize=45: \
+[v_l]drawtext=fontfile='${FONT}':textfile='$TMP/quote.txt':fontcolor=white:fontsize=35: \
 box=1:boxcolor=black@0.7:boxborderw=20:line_spacing=15:x=(w-text_w)/2:y=(h*0.15):expansion=none[v_f]"
 
 VISUAL_MASTER="$TMP/visual_master.mp4"
