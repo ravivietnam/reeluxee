@@ -83,27 +83,29 @@ ffmpeg -i "$VISUAL_MASTER" -i "$AUDIO_FILE" \
   -filter_complex "[1:a]afade=t=out:st=${FADE_VAL}:d=2[aud]" \
   -map 0:v -map "[aud]" -c:v copy -c:a aac -b:a 128k -shortest "$out_file" -y -loglevel warning
 
-# --- 5. GITHUB RELEASE (The "No ZIP" Solution) ---
+# --- 5. GITHUB RELEASE & WEBHOOK (All in one place) ---
 if [ -n "$GH_TOKEN" ]; then
-    echo "📦 Uploading to GitHub Release (Direct MP4)..."
+    echo "📦 Creating Release..."
     TAG_NAME="v-${GITHUB_RUN_ID:-$(date +%s)}"
+    gh release create "$TAG_NAME" "$out_file" --title "Reel: $safe_name"
     
-    # Create the release
-    gh release create "$TAG_NAME" "$out_file" --title "Reel: $safe_name" --notes "Direct MP4 link"
+    # We construct the link right here in the script
+    DIRECT_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG_NAME/$url_filename"
     
-    echo "🧹 Cleaning up old releases..."
-    # FIX: Use --json to get ONLY the tagName, ensuring we don't grab the Title by mistake
-    OLD_RELEASES=$(gh release list --limit 20 --json tagName --jq '.[].tagName' | grep "v-" | grep -v "$TAG_NAME") || true
-    
-    if [ -n "$OLD_RELEASES" ]; then
-        for old_tag in $OLD_RELEASES; do
-            echo "Deleting old release: $old_tag"
-            gh release delete "$old_tag" --yes --cleanup-tag || true
-        done
-    else
-        echo "✨ No old releases found to clean."
+    if [ -n "$WEBHOOK_URL" ]; then
+        echo "🚀 Sending Webhook..."
+        curl -X POST -H "Content-Type: application/json" \
+          -d "{\"Downloadlink\": \"$DIRECT_URL\", \"File name\": \"${safe_name}.mp4\"}" \
+          "$WEBHOOK_URL"
     fi
+
+    # Cleanup old releases
+    echo "🧹 Cleaning up..."
+    OLD_RELEASES=$(gh release list --limit 20 --json tagName --jq '.[].tagName' | grep "v-" | grep -v "$TAG_NAME") || true
+    for old_tag in $OLD_RELEASES; do
+        gh release delete "$old_tag" --yes --cleanup-tag || true
+    done
 fi
 
-echo "✅ SUCCESS! Final file: $out_file"
- rm -rf "$TMP"
+echo "✅ SUCCESS!"
+rm -rf "$TMP"
