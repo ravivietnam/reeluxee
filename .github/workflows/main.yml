@@ -1,6 +1,13 @@
 name: Render Reel Video
+
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *'
+    - cron: '0 12 * * *'
+    - cron: '0 15 * * *'
+    - cron: '0 18 * * *'
+    - cron: '0 21 * * *'
 
 permissions:
   contents: write
@@ -12,7 +19,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # This step ensures ffmpeg is actually there
       - name: Install ffmpeg
         run: |
           sudo apt-get update
@@ -22,7 +28,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
-          GITHUB_REPOSITORY: ${{ github.repository }} # Required for the URL logic
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           chmod +x script.sh
           ./script.sh
