@@ -83,4 +83,45 @@ ffmpeg -i "$VISUAL_MASTER" -i "$AUDIO_FILE" \
   -map 0:v -map "[aud]" -c:v copy -c:a aac -b:a 128k -shortest "$out_file" -y -loglevel warning
 
 echo "✅ SUCCESS! Saved to: $out_file"
+# ... (Previous Video Processing Code remains the same) ...
+
+echo "✅ SUCCESS! Saved to: $out_file"
+
+# --- GITHUB RELEASE LOGIC ---
+# 1. Create a Unique Tag (using Run ID to match your YAML logic)
+TAG_NAME="v-${GITHUB_RUN_ID:-$(date +%s)}"
+
+echo "📦 Creating GitHub Release: $TAG_NAME"
+
+# 2. Create the release and upload the MP4
+# --clobber allows overwriting if the tag exists
+gh release create "$TAG_NAME" "$out_file" \
+    --title "Reel: $safe_name" \
+    --notes "Automated upload from GitHub Actions."
+
+# 3. Construct the DIRECT download URL
+# Replace YOUR_USER and YOUR_REPO with your actual details
+DIRECT_URL="https://github.com/YOUR_USER/YOUR_REPO/releases/download/$TAG_NAME/${safe_name// /_}.mp4"
+
+# 4. SEND TO WEBHOOK
+echo "🚀 Sending direct link to webhook..."
+WEBHOOK_URL="YOUR_WEBHOOK_URL_HERE"
+
+curl -X POST -H "Content-Type: application/json" \
+  -d "{\"content\": \"🎥 **New Reel Generated!**\nDirect MP4 Link: $DIRECT_URL\"}" $WEBHOOK_URL
+
+# 5. AUTO-CLEANUP (The "Retention" Logic)
+# This deletes any releases older than 24 hours to save space
+echo "🧹 Cleaning up old releases..."
+gh release list --limit 50 | while read -r line; do
+    # Get tag name and timestamp
+    OLD_TAG=$(echo "$line" | awk '{print $1}')
+    # If the tag starts with 'v-' and isn't the one we just made
+    if [[ "$OLD_TAG" == v-* ]] && [[ "$OLD_TAG" != "$TAG_NAME" ]]; then
+        echo "Deleting old release: $OLD_TAG"
+        gh release delete "$OLD_TAG" --yes --cleanup-tag
+    fi
+done
+
+rm -rf "$TMP"
 rm -rf "$TMP"
