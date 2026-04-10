@@ -23,6 +23,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           SHEETDB_URL: ${{ secrets.SHEETDB_URL }}
         run: |
           chmod +x script.sh
