@@ -28,7 +28,7 @@ if [ ! -f "$FONT" ]; then
 fi
 
 # Pick assets
-FILES=($(find "$INPUT_DIR" -maxdepth 1 -type f \( -iname "*.mp4" -o -iname "*.mov" \) | sort -R | head -n 10))
+FILES=($(find "$INPUT_DIR" -maxdepth 1 -type f \( -iname "*.mp4" -o -iname "*.mov" \) | sort -R | head -n 15))
 AUDIO_FILE=$(find "$AUDIO_DIR" -maxdepth 1 -type f -iname "*.mp3" | sort -R | head -n 1)
 
 if [ ${#FILES[@]} -eq 0 ]; then echo "❌ No videos found in $INPUT_DIR"; exit 1; fi
@@ -71,8 +71,6 @@ echo "🎵 Step 3: Adding Audio..."
 FADE_VAL=$(echo "$DUR" | awk '{print ($1 > 2) ? $1 - 2 : 0}')
 safe_name=$(echo "$raw" | tr -cd '[:alnum:] ' | cut -c1-50 | xargs)
 
-# --- NEW SAFETY CHECK ---
-# If safe_name is empty because of weird characters in quotes.txt
 if [ -z "$safe_name" ] || [ "$safe_name" = " " ]; then
     safe_name="Reel_$(date +%s)"
 fi
@@ -85,33 +83,35 @@ ffmpeg -i "$VISUAL_MASTER" -i "$AUDIO_FILE" \
   -map 0:v -map "[aud]" -c:v copy -c:a aac -b:a 128k -shortest \
   -movflags +faststart "$out_file" -y -loglevel warning
 
-# --- 5. CATBOX UPLOAD, GITHUB RELEASE & WEBHOOK Skipssss ---
-
-# --- LOG TO GOOGLE SHEETS VIA SHEETDB ---
-    # Put your SheetDB URL here or add it to GitHub Secrets
-    SHEETDB_URL="https://sheetdb.io/api/v1/qy9jx838tav66"
-
+# --- 5. GITHUB RELEASE & SHEETDB LOGGING ---
+if [ -n "$GH_TOKEN" ]; then
+    echo "📦 Creating GitHub Release..."
+    TAG_NAME="v-${GITHUB_RUN_ID:-$(date +%s)}"
+    gh release create "$TAG_NAME" "$out_file" --title "Reel: $safe_name"
+    
+    GHT_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/$TAG_NAME/$url_filename"
+    
+    # Check for SheetDB Secret
     if [ -n "$SHEETDB_URL" ]; then
-        echo "📊 Logging to Google Sheets..."
+        echo "📊 Logging to Google Sheets via SheetDB..."
         
-        # Get current IST date and time
-        CURRENT_DATE=$(date +%Y-%m-%d)
-        CURRENT_TIME=$(date +%H:%M:%S)
+        # Get IST Time (UTC+5:30)
+        CUR_DATE=$(date -d "+5 hours 30 minutes" +%Y-%m-%d)
+        CUR_TIME=$(date -d "+5 hours 30 minutes" +%H:%M:%S)
 
-        # SheetDB expects the data inside a "data" array
         curl -X POST "$SHEETDB_URL" \
           -H "Content-Type: application/json" \
-          -d "{
-            \"data\": [
-              {
-                \"url\": \"$GHT_URL\",
-                \"title\": \"$safe_name\",
-                \"date\": \"$CURRENT_DATE\",
-                \"time\": \"$CURRENT_TIME\"
-              }
-            ]
-          }"
+          -d "{\"data\": [{\"url\": \"$GHT_URL\", \"title\": \"$safe_name\", \"date\": \"$CUR_DATE\", \"time\": \"$CUR_TIME\"}]}"
+    else
+        echo "⚠️ SHEETDB_URL not found. Skipping Google Sheets log."
     fi
+    
+    echo "🧹 Cleaning up old releases..."
+    OLD_RELEASES=$(gh release list --limit 20 --json tagName --jq '.[].tagName' | grep "v-" | grep -v "$TAG_NAME") || true
+    for old_tag in $OLD_RELEASES; do
+        gh release delete "$old_tag" --yes --cleanup-tag || true
+    done
+fi
 
 echo "✅ SUCCESS!"
 rm -rf "$TMP"
