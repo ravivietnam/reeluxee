@@ -29,5 +29,5 @@ jobs:
           GDRIVE_SERVICE_ACCOUNT: ${{ secrets.GDRIVE_SERVICE_ACCOUNT }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
-          chmod +x sync_assets.sh
-          ./sync_assets.sh
+          chmod +x sync_gdrive.sh
+          ./sync_gdrive.sh
