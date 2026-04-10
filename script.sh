@@ -69,7 +69,7 @@ ffmpeg -i "$MERGED_RAW" -i "$LOGO_PATH" -filter_complex "$FILTER" \
 # --- 4. FINAL AUDIO & RENAMING ---
 echo "🎵 Step 3: Adding Audio..."
 FADE_VAL=$(echo "$DUR" | awk '{print ($1 > 2) ? $1 - 2 : 0}')
-safe_name=$(echo "$raw" | tr -cd '[:alnum:] ' | cut -c1-50 | xargs)
+safe_name=$(echo "$raw" | tr -cd '[:alnum:] ' | cut -c1-100 | xargs)
 
 if [ -z "$safe_name" ] || [ "$safe_name" = " " ]; then
     safe_name="Reel_$(date +%s)"
