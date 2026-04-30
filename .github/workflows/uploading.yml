@@ -20,9 +20,7 @@ jobs:
       - name: Download folder
         run: |
           mkdir -p reels
-
-          # Replace with your folder link
-          gdown --folder https://drive.google.com/drive/folders/1520FEU7czB97tS9da1UfrrZXdUdwyjYv -O assets/drive-files
+          gdown --folder https://drive.google.com/drive/folders/1520FEU7czB97tS9da1UfrrZXdUdwyjYv -O reels
 
       - name: Commit and push
         run: |
