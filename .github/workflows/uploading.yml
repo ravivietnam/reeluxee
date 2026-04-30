@@ -2,6 +2,9 @@ name: Download Drive Folder (No Auth)
 
 on:
   workflow_dispatch:
+  
+permissions:
+  contents: write
 
 jobs:
   download:
