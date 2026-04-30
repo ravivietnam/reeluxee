@@ -1,32 +1,25 @@
-name: Sync Drive Folder to Repo
+name: Download Drive Folder (No Auth)
 
 on:
-  workflow_dispatch:   # run manually
-  schedule:
-    - cron: "0 */6 * * *"   # every 6 hours (optional)
+  workflow_dispatch:
 
 jobs:
-  sync:
+  download:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install rclone
-        run: curl https://rclone.org/install.sh | sudo bash
+      - name: Install gdown
+        run: pip install gdown
 
-      - name: Setup rclone config
-        run: |
-          mkdir -p ~/.config/rclone
-          echo '${{ secrets.RCLONE_CONFIG }}' > ~/.config/rclone/rclone.conf
-
-      - name: Sync Drive folder
+      - name: Download folder
         run: |
           mkdir -p reels
 
-          # Replace YOUR_FOLDER_ID
-          rclone sync mydrive:1520FEU7czB97tS9da1UfrrZXdUdwyjYv assets/drive-files --progress
+          # Replace with your folder link
+          gdown --folder https://drive.google.com/drive/folders/1520FEU7czB97tS9da1UfrrZXdUdwyjYv -O assets/drive-files
 
       - name: Commit and push
         run: |
@@ -34,5 +27,5 @@ jobs:
           git config user.email "actions@github.com"
 
           git add assets/drive-files
-          git commit -m "Sync Drive folder" || echo "No changes"
+          git commit -m "Download Drive folder" || echo "No changes"
           git push
