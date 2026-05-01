@@ -47,10 +47,10 @@ logo_fade_out=$(echo "$DUR" | awk '{print ($1 > 1.5) ? $1 - 1.2 : $1 - 0.2}')
 
 # FIXED: Removed loop=-1 and replaced with -ignore_loop 0 in the input (more stable for images)
 # Also added "shortest=1" to the overlay to ensure the video length is the master
+
+
 FILTER="[1:v]scale=180:-1,format=rgba,fade=t=in:st=${logo_start}:d=0.5:alpha=1,fade=t=out:st=${logo_fade_out}:d=0.5:alpha=1[logo_p]; \
-[0:v][logo_p]overlay=x=(W-w)/2:y=H-h-80:shortest=1[v_l]; \
-[v_l]drawtext=fontfile='${FONT}':textfile='$TMP/quote.txt':fontcolor=white:fontsize=35: \
-box=1:boxcolor=black@0.7:boxborderw=20:line_spacing=15:x=(w-text_w)/2:y=(h*0.15):expansion=none[v_f]"
+[0:v][logo_p]overlay=x=(W-w)/2:y=H-h-80:shortest=1[v_f]"
 
 VISUAL_MASTER="$TMP/visual_master.mp4"
 
