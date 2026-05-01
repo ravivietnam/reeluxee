@@ -35,5 +35,5 @@ jobs:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           SHEETDB_URL: ${{ secrets.SHEETDB_URL }}
         run: |
-          chmod +x zapier.sh
-          ./zapier.sh
+          chmod +x buffer.sh
+          ./buffer.sh
